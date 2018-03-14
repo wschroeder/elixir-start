@@ -14,11 +14,9 @@ clean:
 
 repl: control/elixir-image
 	docker run -v "${PWD}/control/mix":/root/.mix -v "${PWD}/${ELIXIR_PROJECT_NAME}":/work -w /work --rm -it ${ELIXIR_IMAGE} iex
-	sudo chown -R $(shell whoami):$(shell whoami) "${PWD}"
 
 repl-mix: control/mix-deps control/mssql-container control/elixir-image
 	docker run --network ${ELIXIR_PROJECT_NAME}-uats -v "${PWD}/control/mix":/root/.mix -v "${PWD}/${ELIXIR_PROJECT_NAME}":/work -w /work --rm -it -p 4000:4000 -p 4001:4001 ${ELIXIR_IMAGE} iex -S mix phx.server
-	sudo chown -R $(shell whoami):$(shell whoami) "${PWD}"
 
 format: control/elixir-image
 	docker run -v "${PWD}/control/mix":/root/.mix -v "${PWD}/${ELIXIR_PROJECT_NAME}":/work -w /work --rm -it ${ELIXIR_IMAGE} mix format --check-equivalent mix.exs "lib/**/*.{ex,exs}" "test/**/*.{ex,exs}"
