@@ -77,7 +77,7 @@ cd "$project_name"
     sed -i "/^  defp deps do/,+1c \\  defp deps do\\n    [\\n      {:distillery, \"~> ${DISTILLERY_VERSION}\", runtime: false}," "${elixir_project_name}/mix.exs"
 
     # project options
-    sed -i 's/ deps: deps()$/ deps: deps(),/;/ deps: deps(),/a \      dialyzer: [plt_add_deps: :project, plt_add_apps: [:plug, :ecto]],' "${elixir_project_name}/mix.exs"
+    sed -i 's/ deps: deps()$/ deps: deps(),/;/ deps: deps(),/a \      dialyzer: [plt_add_deps: :project, plt_add_apps: [:plug, :ecto, :poison, :httpoison]],' "${elixir_project_name}/mix.exs"
     sed -i 's/ extra_applications: \(.*\)]/ extra_applications: \1, :wobserver]/' "${elixir_project_name}/mix.exs"
 
     # remove ecto "test" override
