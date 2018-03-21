@@ -29,11 +29,11 @@ control/mssql-container: control/control control/uats-network control/mssql-imag
 	uats/mssql-image/build-mssql.sh ${MSSQL_PASSWORD}
 	touch "$@"
 
-control/mssql-image: uats/mssql-image/Dockerfile
+control/mssql-image: control/control uats/mssql-image/Dockerfile
 	docker build -t ${ELIXIR_PROJECT_NAME}-mssql -f uats/mssql-image/Dockerfile .
 	touch "$@"
 
-control/uats-network:
+control/uats-network: control/control
 	-docker rm -f ${ELIXIR_PROJECT_NAME}-mssql
 	-docker network rm ${ELIXIR_PROJECT_NAME}-uats
 	docker network create ${ELIXIR_PROJECT_NAME}-uats
@@ -43,7 +43,7 @@ control/uats: control/control control/elixir-unit control/uats-deps control/mssq
 	docker run --network ${ELIXIR_PROJECT_NAME}-uats -v /usr/bin/docker:/usr/bin/docker:ro -v /var/run/docker.sock:/var/run/docker.sock:rw -v "${PWD}/control/mix":/root/.mix -v "${PWD}/uats":/work -w /work --rm -it ${ELIXIR_IMAGE} mix test
 	touch "$@"
 
-control/uats-deps: uats/mix.exs
+control/uats-deps: control/control uats/mix.exs
 	docker run -v "${PWD}/control/mix":/root/.mix -v "${PWD}/uats":/work -w /work --rm -it ${ELIXIR_IMAGE} mix deps.get
 	touch "$@"
 
@@ -111,7 +111,7 @@ control/rebar: control/control control/elixir-image
 	sudo chown -R $(shell whoami) "${PWD}"
 	touch "$@"
 
-control/elixir-image: elixir/Dockerfile
+control/elixir-image: control/control elixir/Dockerfile
 	docker build -t ${ELIXIR_IMAGE} elixir/
 	touch "$@"
 
