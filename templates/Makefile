@@ -15,11 +15,14 @@ clean:
 repl: control/elixir-image
 	docker run -v "${PWD}/control/mix":/root/.mix -v "${PWD}/${ELIXIR_PROJECT_NAME}":/work -w /work --rm -it ${ELIXIR_IMAGE} iex
 
-repl-mix: control/mix-deps control/mssql-container control/elixir-image
+repl-mix: control/mix-deps control/mssql-container control/elixir-image ${ELIXIR_PROJECT_NAME}/assets/node_modules/brunch/bin/brunch
 	docker run --network ${ELIXIR_PROJECT_NAME}-uats -v "${PWD}/control/mix":/root/.mix -v "${PWD}/${ELIXIR_PROJECT_NAME}":/work -w /work --rm -it -p 4000:4000 -p 4001:4001 ${ELIXIR_IMAGE} iex -S mix phx.server
 
 format: control/elixir-image
 	docker run -v "${PWD}/control/mix":/root/.mix -v "${PWD}/${ELIXIR_PROJECT_NAME}":/work -w /work --rm -it ${ELIXIR_IMAGE} mix format --check-equivalent mix.exs "lib/**/*.{ex,exs}" "test/**/*.{ex,exs}"
+
+${ELIXIR_PROJECT_NAME}/assets/node_modules/brunch/bin/brunch:
+	docker run --network ${ELIXIR_PROJECT_NAME}-uats -v "${PWD}/control/mix":/root/.mix -v "${PWD}/${ELIXIR_PROJECT_NAME}":/work -w /work --rm -it -p 4000:4000 -p 4001:4001 ${ELIXIR_IMAGE} bash -c 'cd assets && npm install'
 
 # https://hub.docker.com/r/microsoft/mssql-server-linux/
 control/mssql-container: control/control control/uats-network control/mssql-image uats/mssql-image/build-mssql.sh
@@ -36,7 +39,7 @@ control/uats-network:
 	docker network create ${ELIXIR_PROJECT_NAME}-uats
 	touch "$@"
 
-control/uats: control/control control/elixir-unit control/uats-deps control/mssql-container control/project-image $(wildcard uats/test/*) $(wildcard uats/**/*)
+control/uats: control/control control/elixir-unit control/uats-deps control/mssql-container control/project-image ${ELIXIR_PROJECT_NAME}/assets/node_modules/brunch/bin/brunch $(wildcard uats/test/*) $(wildcard uats/**/*)
 	docker run --network ${ELIXIR_PROJECT_NAME}-uats -v /usr/bin/docker:/usr/bin/docker:ro -v /var/run/docker.sock:/var/run/docker.sock:rw -v "${PWD}/control/mix":/root/.mix -v "${PWD}/uats":/work -w /work --rm -it ${ELIXIR_IMAGE} mix test
 	touch "$@"
 
