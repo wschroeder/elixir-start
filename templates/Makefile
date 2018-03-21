@@ -84,7 +84,7 @@ control/credo-check: control/control \
                      $(wildcard ${ELIXIR_PROJECT_NAME}/src/*) $(wildcard ${ELIXIR_PROJECT_NAME}/src/**/*) \
                      $(wildcard ${ELIXIR_PROJECT_NAME}/test/*) $(wildcard ${ELIXIR_PROJECT_NAME}/test/**/*)
 	docker run -v "${PWD}/control/mix":/root/.mix -v "${PWD}/${ELIXIR_PROJECT_NAME}":/work -w /work --rm -it ${ELIXIR_IMAGE} mix credo
-	sudo chown -R $(shell whoami):$(shell whoami) "${PWD}"
+	sudo chown -R $(shell whoami) "${PWD}"
 	touch "$@"
 
 control/dialyzer-check: control/control \
@@ -94,7 +94,7 @@ control/dialyzer-check: control/control \
                         $(wildcard ${ELIXIR_PROJECT_NAME}/src/*) $(wildcard ${ELIXIR_PROJECT_NAME}/src/**/*) \
                         $(wildcard ${ELIXIR_PROJECT_NAME}/test/*) $(wildcard ${ELIXIR_PROJECT_NAME}/test/**/*)
 	docker run -v "${PWD}/control/mix":/root/.mix -v "${PWD}/${ELIXIR_PROJECT_NAME}":/work -w /work --rm -it ${ELIXIR_IMAGE} mix dialyzer
-	sudo chown -R $(shell whoami):$(shell whoami) "${PWD}"
+	sudo chown -R $(shell whoami) "${PWD}"
 	touch "$@"
 
 control/elixir-unit: control/control \
@@ -108,17 +108,17 @@ control/elixir-unit: control/control \
 
 control/mix-deps: control/control control/elixir-image control/hex control/rebar ${ELIXIR_PROJECT_NAME}/mix.exs
 	docker run -v "${PWD}/control/mix":/root/.mix -v "${PWD}/${ELIXIR_PROJECT_NAME}":/work -w /work --rm -it ${ELIXIR_IMAGE} mix deps.get
-	sudo chown -R $(shell whoami):$(shell whoami) "${PWD}"
+	sudo chown -R $(shell whoami) "${PWD}"
 	touch "$@"
 
 control/hex: control/control control/elixir-image
 	docker run -v "${PWD}/control/mix":/root/.mix -v "${PWD}/${ELIXIR_PROJECT_NAME}":/work -w /work --rm -it ${ELIXIR_IMAGE} mix local.hex --force
-	sudo chown -R $(shell whoami):$(shell whoami) "${PWD}"
+	sudo chown -R $(shell whoami) "${PWD}"
 	touch "$@"
 
 control/rebar: control/control control/elixir-image
 	docker run -v "${PWD}/control/mix":/root/.mix -v "${PWD}/${ELIXIR_PROJECT_NAME}":/work -w /work --rm -it ${ELIXIR_IMAGE} mix local.rebar --force
-	sudo chown -R $(shell whoami):$(shell whoami) "${PWD}"
+	sudo chown -R $(shell whoami) "${PWD}"
 	touch "$@"
 
 control/elixir-image: elixir/Dockerfile
