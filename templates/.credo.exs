@@ -66,7 +66,7 @@
         # or the `schema` macro in Ecto schemas to trigger DuplicatedCode, just
         # set the `excluded_macros` parameter to `[:schema, :setup, :test]`.
         #
-        {Credo.Check.Design.DuplicatedCode, excluded_macros: [], mass_threshold: 4, nodes_threshold: 2},
+        {Credo.Check.Design.DuplicatedCode, excluded_macros: [], mass_threshold: 40, nodes_threshold: 2},
 
         # You can also customize the exit_status of each check.
         # If you don't want TODO comments to cause `mix credo` to fail, just
