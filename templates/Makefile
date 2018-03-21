@@ -85,7 +85,7 @@ control/dialyzer-check: control/control \
                         control/elixir-image \
                         control/mix-deps \
                         $(shell find ${ELIXIR_PROJECT_NAME}/test ${ELIXIR_PROJECT_NAME}/lib -type f)
-	docker run -v "${PWD}/control/mix":/root/.mix -v "${PWD}/${ELIXIR_PROJECT_NAME}":/work -w /work --rm -it ${ELIXIR_IMAGE} mix dialyzer
+	docker run -v "${PWD}/control/mix":/root/.mix -v "${PWD}/${ELIXIR_PROJECT_NAME}":/work -w /work --rm -it ${ELIXIR_IMAGE} mix dialyzer --halt-exit-status
 	sudo chown -R $(shell whoami) "${PWD}"
 	touch "$@"
 
