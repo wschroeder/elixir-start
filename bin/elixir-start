@@ -68,6 +68,12 @@ cd "$project_name"
     sed -i "s/{{MSSQL_PASSWORD}}/${MSSQL_PASSWORD}/" Makefile
 }
 
+# Update Makefile.setup-control
+{
+    cp $HOME/.elixir-start/Makefile.setup-control "$PWD"
+    sed -i "s/{{ELIXIR_CLASS}}/$(sed 's/\//\\\//g' <<<${ELIXIR_CLASS})/" Makefile.setup-control
+}
+
 # Update mix.exs
 {
     # deps

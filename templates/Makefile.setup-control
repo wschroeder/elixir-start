@@ -1,0 +1,45 @@
+#!/bin/bash
+
+set -e
+
+ELIXIR_PROJECT_NAME=$1
+ELIXIR_IMAGE=$2
+
+if [[ ! -d control ]]; then
+    mkdir control
+fi
+
+if ! docker inspect ${ELIXIR_PROJECT_NAME}-mssql | grep '"Status": "running"' &> /dev/null; then
+    rm -f control/mssql-container
+fi
+if [[ "$(docker images -q --filter reference=${ELIXIR_PROJECT_NAME}-project:latest | wc -l | sed 's/\s*//')" == "0" ]]; then
+    rm -f control/project-image
+fi
+if [[ "$(docker images -q --filter reference=${ELIXIR_IMAGE} | wc -l | sed 's/\s*//')" == "0" ]]; then
+    rm -f control/elixir-image
+fi
+if [[ "$(docker network ls -q --filter=name=${ELIXIR_PROJECT_NAME}-uats | wc -l | sed 's/\s*//')" == "0" ]]; then
+    rm -f control/uats-network
+fi
+
+# Kinda a hack, but we do not have any serious secrets we care about right
+# now.  Still, we may eventually want to store the secrets file specially;
+# therefore, we are maintaining the Elixir/Phoenix idiom of not including the
+# secrets file in the repo... we will just generate it for our convenience.
+secret_file="${ELIXIR_PROJECT_NAME}/config/prod.secret.exs"
+use Mix.Config
+
+# In this file, we keep production configuration that
+# you'll likely want to automate and keep away from
+# your version control system.
+#
+# You should document the content of this
+# file or create a script for recreating it, since it's
+# kept out of version control and might be hard to recover
+# or recreate for your teammates (or yourself later on).
+config :as_x_charts, {{ELIXIR_CLASS}}.Endpoint,
+  secret_key_base: "5Mxk03BFzi9x/tFEJNNnf0/yLfdX+8ER8hDE1DOVPFybXiPvXI/NesDZZHhSE5oq"
+
+EOF
+fi
+
