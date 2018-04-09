@@ -17,7 +17,7 @@ clean:
 repl: control/elixir-image
 	docker run -v "${PWD}/control/mix":/root/.mix -v "${PWD}/${ELIXIR_PROJECT_NAME}":/work -w /work --rm -it ${ELIXIR_IMAGE} iex
 
-repl-mix: control/mix-deps control/mssql-container control/elixir-image ${ELIXIR_PROJECT_NAME}/assets/node_modules/brunch/bin/brunch
+repl-mix: control/mix-deps control/mssql-container control/elixir-image control/uats-network ${ELIXIR_PROJECT_NAME}/assets/node_modules/brunch/bin/brunch
 	docker run --network ${ELIXIR_PROJECT_NAME}-uats -v "${PWD}/control/mix":/root/.mix -v "${PWD}/${ELIXIR_PROJECT_NAME}":/work -w /work --rm -it -p 4000:4000 -p 4001:4001 ${ELIXIR_IMAGE} iex -S mix phx.server
 
 format: control/elixir-image
@@ -41,8 +41,8 @@ control/uats-network:
 	docker network create ${ELIXIR_PROJECT_NAME}-uats
 	touch "$@"
 
-control/uats: control/elixir-unit control/uats-deps control/mssql-container control/project-image ${ELIXIR_PROJECT_NAME}/assets/node_modules/brunch/bin/brunch $(shell find uats/ -type f)
-	docker run --network ${ELIXIR_PROJECT_NAME}-uats -v /usr/bin/docker:/usr/bin/docker:ro -v /var/run/docker.sock:/var/run/docker.sock:rw -v "${PWD}/control/mix":/root/.mix -v "${PWD}/uats":/work -w /work --rm -t ${ELIXIR_IMAGE} mix test
+control/uats: control/elixir-unit control/uats-deps control/mssql-container control/project-image control/uats-network ${ELIXIR_PROJECT_NAME}/assets/node_modules/brunch/bin/brunch $(shell find uats/ -type f)
+	docker run --network ${ELIXIR_PROJECT_NAME}-uats -v $(shell which docker):/usr/bin/docker:ro -v /var/run/docker.sock:/var/run/docker.sock:rw -v "${PWD}/control/mix":/root/.mix -v "${PWD}/uats":/work -w /work --rm -t ${ELIXIR_IMAGE} mix test
 	touch "$@"
 
 control/uats-deps: uats/mix.exs
