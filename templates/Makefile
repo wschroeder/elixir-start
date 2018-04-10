@@ -4,7 +4,7 @@ MSSQL_PASSWORD='{{MSSQL_PASSWORD}}'
 
 $(shell ./Makefile.setup-control ${ELIXIR_PROJECT_NAME} ${ELIXIR_IMAGE})
 
-.PHONY: all check clean format repl repl-mix
+.PHONY: all check clean format repl repl-mix repl-uats
 
 all: check
 
@@ -44,6 +44,9 @@ control/uats-network:
 control/uats: control/elixir-unit control/uats-deps control/mssql-container control/project-image control/uats-network ${ELIXIR_PROJECT_NAME}/assets/node_modules/brunch/bin/brunch $(shell find uats/ -type f)
 	docker run --network ${ELIXIR_PROJECT_NAME}-uats -v $(shell which docker):/usr/bin/docker:ro -v /var/run/docker.sock:/var/run/docker.sock:rw -v "${PWD}/control/mix":/root/.mix -v "${PWD}/uats":/work -w /work --rm -t ${ELIXIR_IMAGE} mix test
 	touch "$@"
+
+repl-uats: control/elixir-unit control/uats-deps control/mssql-container control/project-image control/uats-network ${ELIXIR_PROJECT_NAME}/assets/node_modules/brunch/bin/brunch $(shell find uats/ -type f)
+	docker run --network ${ELIXIR_PROJECT_NAME}-uats -v $(shell which docker):/usr/bin/docker:ro -v /var/run/docker.sock:/var/run/docker.sock:rw -v "${PWD}/control/mix":/root/.mix -v "${PWD}/uats":/work -w /work --rm -it ${ELIXIR_IMAGE} iex -S mix test
 
 control/uats-deps: uats/mix.exs
 	docker run -v "${PWD}/control/mix":/root/.mix -v "${PWD}/uats":/work -w /work --rm -t ${ELIXIR_IMAGE} mix deps.get

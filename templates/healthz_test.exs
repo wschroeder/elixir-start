@@ -3,7 +3,7 @@ defmodule HealthzTest do
 
   setup_all do
     container_name = "{{ELIXIR_PROJECT_NAME}}-project-#{:rand.uniform(1000000)}"
-    {_, 0} = System.cmd "docker", ~w[run -d --network {{ELIXIR_PROJECT_NAME}}-uats --name] ++ [container_name] ++ ~w[{{ELIXIR_PROJECT_NAME}}-project]
+    {_, 0} = System.cmd "docker", ~w[run -d -t --network {{ELIXIR_PROJECT_NAME}}-uats --name] ++ [container_name] ++ ~w[{{ELIXIR_PROJECT_NAME}}-project]
 
     on_exit fn ->
       System.cmd "docker", ["rm", "-f", container_name]
