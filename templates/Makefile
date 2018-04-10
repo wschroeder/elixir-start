@@ -24,7 +24,7 @@ format: control/elixir-image
 	docker run -v "${PWD}/control/mix":/root/.mix -v "${PWD}/${ELIXIR_PROJECT_NAME}":/work -w /work --rm -t ${ELIXIR_IMAGE} mix format --check-equivalent mix.exs "lib/**/*.{ex,exs}" "test/**/*.{ex,exs}"
 
 ${ELIXIR_PROJECT_NAME}/assets/node_modules/brunch/bin/brunch:
-	docker run --network ${ELIXIR_PROJECT_NAME}-uats -v "${PWD}/control/mix":/root/.mix -v "${PWD}/${ELIXIR_PROJECT_NAME}":/work -w /work --rm -t -p 4000:4000 -p 4001:4001 ${ELIXIR_IMAGE} bash -c 'cd assets && npm install'
+	docker run --network -v "${PWD}/control/mix":/root/.mix -v "${PWD}/${ELIXIR_PROJECT_NAME}":/work -w /work --rm -t -p 4000:4000 -p 4001:4001 ${ELIXIR_IMAGE} bash -c 'cd assets && npm install'
 
 # https://hub.docker.com/r/microsoft/mssql-server-linux/
 control/mssql-container: control/uats-network control/mssql-image uats/mssql-image/build-mssql.sh
