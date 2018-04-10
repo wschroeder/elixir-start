@@ -5,23 +5,23 @@ ENV ACCEPT_EULA=Y
 
 RUN apt-get update && \
     apt-get install --no-install-recommends --yes locales inotify-tools curl apt-transport-https && \
-
+    \
     echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen en_US en_US.UTF-8 && \
     update-locale LC_ALL=en_US.UTF-8 LANG=en_US.utf8 LANGUAGE="en_US:" && \
-
+    \
     curl -sL https://deb.nodesource.com/setup_6.x -o nodesource_setup.sh && \
     bash nodesource_setup.sh && \
     rm nodesource_setup.sh && \
     apt-get install --no-install-recommends --yes nodejs && \
-
+    \
     curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
     curl https://packages.microsoft.com/config/debian/8/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
     echo 'deb http://ftp.us.debian.org/debian jessie main' >> /etc/apt/sources.list.d/mssql-release.list && \
-
+    \
     apt-get update && \
     apt-get install --no-install-recommends --yes libssl1.0.0 msodbcsql mssql-tools unixodbc-dev && \
-
+    \
     sed -i 's/Driver 13/Driver 17/g' /etc/odbcinst.ini
 
 ENV LC_ALL=en_US.UTF-8
