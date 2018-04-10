@@ -56,14 +56,15 @@ control/project-image: control/elixir-image uats/project-image/Dockerfile
 	docker build -t ${ELIXIR_PROJECT_NAME}-project -f uats/project-image/Dockerfile .
 	touch "$@"
 
-uats/project-image/Dockerfile: foo_bar/_build/prod/rel/foo_bar/bin/foo_bar
+uats/project-image/Dockerfile: ${ELIXIR_PROJECT_NAME}/_build/prod/rel/${ELIXIR_PROJECT_NAME}/bin/${ELIXIR_PROJECT_NAME}
 	touch "$@"
 
-foo_bar/_build/prod/rel/foo_bar/bin/foo_bar: ${ELIXIR_PROJECT_NAME}/rel/config.exs \
-                                             ${ELIXIR_PROJECT_NAME}/config/prod.exs \
-                                             ${ELIXIR_PROJECT_NAME}/config/prod.secret.exs \
-                                             control/mix-deps \
-                                             $(shell find ${ELIXIR_PROJECT_NAME}/test ${ELIXIR_PROJECT_NAME}/lib -type f)
+${ELIXIR_PROJECT_NAME}/_build/prod/rel/${ELIXIR_PROJECT_NAME}/bin/${ELIXIR_PROJECT_NAME}: ${ELIXIR_PROJECT_NAME}/rel/config.exs \
+                                                                                          ${ELIXIR_PROJECT_NAME}/config/prod.exs \
+                                                                                          ${ELIXIR_PROJECT_NAME}/config/prod.secret.exs \
+                                                                                          ${ELIXIR_PROJECT_NAME}/assets/node_modules/brunch/bin/brunch \
+                                                                                          control/mix-deps \
+                                                                                          $(shell find ${ELIXIR_PROJECT_NAME}/test ${ELIXIR_PROJECT_NAME}/lib -type f)
 	docker run -v "${PWD}/control/mix":/root/.mix -v "${PWD}/${ELIXIR_PROJECT_NAME}/assets":/work -w /work --rm -t ${ELIXIR_IMAGE} node_modules/brunch/bin/brunch b -p
 	docker run -e MIX_ENV=prod -v "${PWD}/control/mix":/root/.mix -v "${PWD}/${ELIXIR_PROJECT_NAME}":/work -w /work --rm -t ${ELIXIR_IMAGE} mix phx.digest
 	docker run -e MIX_ENV=prod -v "${PWD}/control/mix":/root/.mix -v "${PWD}/${ELIXIR_PROJECT_NAME}":/work -w /work --rm -t ${ELIXIR_IMAGE} mix release --verbose
