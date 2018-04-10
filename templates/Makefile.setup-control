@@ -27,6 +27,7 @@ fi
 # therefore, we are maintaining the Elixir/Phoenix idiom of not including the
 # secrets file in the repo... we will just generate it for our convenience.
 secret_file="${ELIXIR_PROJECT_NAME}/config/prod.secret.exs"
+    cat > "$secret_file" <<EOF
 use Mix.Config
 
 # In this file, we keep production configuration that
@@ -37,9 +38,17 @@ use Mix.Config
 # file or create a script for recreating it, since it's
 # kept out of version control and might be hard to recover
 # or recreate for your teammates (or yourself later on).
-config :as_x_charts, {{ELIXIR_CLASS}}.Endpoint,
+config :${ELIXIR_PROJECT_NAME}, {{ELIXIR_CLASS}}.Endpoint,
   secret_key_base: "5Mxk03BFzi9x/tFEJNNnf0/yLfdX+8ER8hDE1DOVPFybXiPvXI/NesDZZHhSE5oq"
 
+# Configure your database
+config :${ELIXIR_PROJECT_NAME}, {{ELIXIR_CLASS}}.Repo,
+  adapter: MssqlEcto,
+  username: "sa",
+  password: "What4StrongPassword!",
+  database: "${ELIXIR_PROJECT_NAME}_prod",
+  hostname: "${ELIXIR_PROJECT_NAME}-mssql",
+  pool_size: 15
+
 EOF
-fi
 
