@@ -10,7 +10,7 @@ MSSQL_PASSWORD='What4StrongPassword!'
 
 set -ex
 
-trap "sudo chown -R $(whoami):$(whoami) '$PWD'" EXIT
+trap "sudo chown -R $(whoami) '$PWD'" EXIT
 
 project_name=$1
 if [[ -z "$project_name" ]]; then
@@ -42,7 +42,7 @@ cd "$project_name"
     docker run -v "${PWD}/control/mix":/root/.mix -v "${PWD}/$elixir_project_name":/work -w /work --rm ${ELIXIR_IMAGE} mix local.hex --force
     docker run -v "${PWD}/control/mix":/root/.mix -v "${PWD}/$elixir_project_name":/work -w /work --rm ${ELIXIR_IMAGE} mix archive.install --force https://github.com/phoenixframework/archives/raw/master/phx_new.ez
     yes | head -n 2 | docker run -i -v "${PWD}/control/mix":/root/.mix -v "${PWD}":/work -w /work --rm ${ELIXIR_IMAGE} mix phx.new --database mssql $elixir_project_name
-    sudo chown -R $(whoami):$(whoami) "$PWD"
+    sudo chown -R $(whoami) "$PWD"
 }
 
 # Remove the standard Ecto and Phoenix test stuff; we want unit tests at
@@ -132,7 +132,7 @@ cd "$project_name"
 # Set up UATs directory
 {
     docker run -v "${PWD}/control/mix":/root/.mix -v "${PWD}":/work -w /work --rm ${ELIXIR_IMAGE} mix new uats
-    sudo chown -R $(whoami):$(whoami) "$PWD/uats"
+    sudo chown -R $(whoami) "$PWD/uats"
 
     rm -rf "${PWD}/uats/"{lib,config,README.md,.formatter.exs}
     sed -i "/^  defp deps do/,+1c \\  defp deps do\\n    [\\n      {:httpoison, \"~> ${UATS_HTTPOISON_VERSION}\", only: [:test]}," "uats/mix.exs"
