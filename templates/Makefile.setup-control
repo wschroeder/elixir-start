@@ -27,6 +27,7 @@ fi
 # therefore, we are maintaining the Elixir/Phoenix idiom of not including the
 # secrets file in the repo... we will just generate it for our convenience.
 secret_file="${ELIXIR_PROJECT_NAME}/config/prod.secret.exs"
+if [[ ! -e "$secret_file" ]]; then
     cat > "$secret_file" <<EOF
 use Mix.Config
 
@@ -51,4 +52,5 @@ config :${ELIXIR_PROJECT_NAME}, {{ELIXIR_CLASS}}.Repo,
   pool_size: 15
 
 EOF
+fi
 
