@@ -112,6 +112,11 @@ cd "$project_name"
     perl -i -0777 -pe "s{^config :${elixir_project_name}, ${elixir_class_name}Web.Endpoint,.*?\n\n}{config :${elixir_project_name}, ${elixir_class_name}Web.Endpoint,\n  load_from_system_env: true,\n  http: [port: {:system, \"PORT\"}],\n  url: [host: \"0.0.0.0\", port: {:system, \"PORT\"}],\n  cache_static_manifest: \"priv/static/cache_manifest.json\",\n  server: true,\n  root: \".\",\n  version: Application.spec(:${elixir_project_name}, :vsn)\n\n}sm" "$PWD/$elixir_project_name/config/prod.exs"
 }
 
+# Update bunch-config.js
+{
+    sed -i 's/};/  , notifications: false\n};/' "$PWD/$elixir_project_name/assets/brunch-config.js"
+}
+
 # Set up /healthz/ping endpoint
 {
     sed -i '/get.* PageController,/a \    get("/healthz/readiness", HealthzController, :readiness)' "${elixir_project_name}/lib/${elixir_project_name}_web/router.ex"
