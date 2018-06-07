@@ -1,0 +1,18 @@
+FROM elixir:{{ELIXIR_DOCKER_IMAGE_VERSION}}
+
+RUN apt-get update && \
+    apt-get install --no-install-recommends --yes locales inotify-tools curl apt-transport-https && \
+    \
+    echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
+    locale-gen en_US en_US.UTF-8 && \
+    update-locale LC_ALL=en_US.UTF-8 LANG=en_US.utf8 LANGUAGE="en_US:" && \
+    \
+    curl -sL https://deb.nodesource.com/setup_6.x -o nodesource_setup.sh && \
+    bash nodesource_setup.sh && \
+    rm nodesource_setup.sh && \
+    apt-get install --no-install-recommends --yes nodejs
+
+ENV LC_ALL=en_US.UTF-8
+ENV LANG=en_US.utf8
+ENV LANGUAGE=en_US:
+

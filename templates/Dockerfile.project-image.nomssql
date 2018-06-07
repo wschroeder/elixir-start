@@ -1,0 +1,17 @@
+FROM debian:9.3-slim
+
+RUN apt-get update && \
+    apt-get install --no-install-recommends --yes locales ca-certificates libssl1.1 curl apt-transport-https gnupg && \
+    echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
+    locale-gen en_US en_US.UTF-8 && \
+    update-locale LC_ALL=en_US.UTF-8 LANG=en_US.utf8 LANGUAGE="en_US:"
+
+ENV LC_ALL=en_US.UTF-8
+ENV LANG=en_US.utf8
+ENV LANGUAGE=en_US:
+ENV PORT=80
+
+COPY {{ELIXIR_PROJECT_NAME}}/_build/prod/rel/{{ELIXIR_PROJECT_NAME}} /{{ELIXIR_PROJECT_NAME}}
+
+CMD ["/{{ELIXIR_PROJECT_NAME}}/bin/{{ELIXIR_PROJECT_NAME}}", "console"]
+

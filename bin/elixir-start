@@ -12,12 +12,34 @@ set -e
 
 project_name=$1
 if [[ -z "$project_name" ]]; then
-    echo "$0 <project-name>"
+    echo "$0 <project-name> [-n]"
+    echo ""
+    echo "    -n     Do [n]ot set up MSSQL"
+    exit 2
 fi
 
-set -x
+shift;
+args=`getopt n $*`
+
+setup_mssql=true
+
+if [ $? == 0 ]; then
+    set -- $args
+
+    for opt; do
+        case "$opt" in
+            -n)
+                setup_mssql=false
+                shift;;
+            --)
+                shift; break;;
+        esac
+    done
+fi
 
 trap "sudo chown -R $(whoami) '$PWD'" EXIT
+
+set -x
 
 sudo rm -rf ${project_name}
 
@@ -30,20 +52,31 @@ echo "Creating $project_name (elixir: $elixir_project_name)"
 mkdir "$project_name"
 cd "$project_name"
 
-# Build Elixir image to include support for Phoenix and MSSQL
+# Build Elixir image to include support for Phoenix and optionally MSSQL
 {
     mkdir elixir
-    cp $HOME/.elixir-start/Dockerfile.elixir "$PWD/elixir/Dockerfile"
+    if $setup_mssql; then
+        cp $HOME/.elixir-start/Dockerfile.elixir "$PWD/elixir/Dockerfile"
+    else
+        cp $HOME/.elixir-start/Dockerfile.elixir-nomssql "$PWD/elixir/Dockerfile"
+    fi
+
     sed -i "s/{{ELIXIR_DOCKER_IMAGE_VERSION}}/${ELIXIR_DOCKER_IMAGE_VERSION}/" "$PWD/elixir/Dockerfile"
     docker build -t ${ELIXIR_IMAGE} elixir/
 }
 
-# Lay down the Phoenix skeleton with MSSQL support
+# Lay down the Phoenix skeleton with optional MSSQL support
 {
     mkdir -p "${PWD}/control/mix"
     docker run -v "${PWD}/control/mix":/root/.mix -v "${PWD}/$elixir_project_name":/work -w /work --rm ${ELIXIR_IMAGE} mix local.hex --force
     docker run -v "${PWD}/control/mix":/root/.mix -v "${PWD}/$elixir_project_name":/work -w /work --rm ${ELIXIR_IMAGE} mix archive.install --force https://github.com/phoenixframework/archives/raw/master/phx_new.ez
-    yes | head -n 2 | docker run -i -v "${PWD}/control/mix":/root/.mix -v "${PWD}":/work -w /work --rm ${ELIXIR_IMAGE} mix phx.new --database mssql $elixir_project_name
+
+    if $setup_mssql; then
+        yes | head -n 2 | docker run -i -v "${PWD}/control/mix":/root/.mix -v "${PWD}":/work -w /work --rm ${ELIXIR_IMAGE} mix phx.new --database mssql $elixir_project_name
+    else
+        yes | head -n 2 | docker run -i -v "${PWD}/control/mix":/root/.mix -v "${PWD}":/work -w /work --rm ${ELIXIR_IMAGE} mix phx.new --no-ecto $elixir_project_name
+    fi
+
     sudo chown -R $(whoami) "$PWD"
 }
 
@@ -64,7 +97,12 @@ cd "$project_name"
 
 # Update Makefile
 {
-    cp $HOME/.elixir-start/Makefile "$PWD"
+    if $setup_mssql; then
+        cp $HOME/.elixir-start/Makefile "$PWD/Makefile"
+    else
+        cp $HOME/.elixir-start/Makefile.nomssql "$PWD/Makefile"
+    fi
+
     sed -i "s/{{ELIXIR_IMAGE}}/$(sed 's/\//\\\//g' <<<${ELIXIR_IMAGE})/" Makefile
     sed -i "s/{{ELIXIR_PROJECT_NAME}}/${elixir_project_name}/" Makefile
     sed -i "s/{{MSSQL_PASSWORD}}/${MSSQL_PASSWORD}/" Makefile
@@ -72,7 +110,12 @@ cd "$project_name"
 
 # Update Makefile.setup-control
 {
-    cp $HOME/.elixir-start/Makefile.setup-control "$PWD"
+    if $setup_mssql; then
+        cp $HOME/.elixir-start/Makefile.setup-control "$PWD/Makefile.setup-control"
+    else
+        cp $HOME/.elixir-start/Makefile.setup-control.nomssql "$PWD/Makefile.setup-control"
+    fi
+
     sed -i "s/{{ELIXIR_CLASS}}/$(sed 's/\//\\\//g' <<<${ELIXIR_CLASS})/" Makefile.setup-control
 }
 
@@ -85,7 +128,11 @@ cd "$project_name"
     sed -i "/^  defp deps do/,+1c \\  defp deps do\\n    [\\n      {:distillery, \"~> ${DISTILLERY_VERSION}\", runtime: false}," "${elixir_project_name}/mix.exs"
 
     # project options
-    sed -i 's/ deps: deps()$/ deps: deps(),/;/ deps: deps(),/a \      dialyzer: [plt_add_deps: :project, plt_add_apps: [:plug, :ecto, :poison, :httpoison]],' "${elixir_project_name}/mix.exs"
+    if $setup_mssql; then
+        ecto_dep=":ecto, "
+    fi
+
+    sed -i "s/ deps: deps()$/ deps: deps(),/;/ deps: deps(),/a \      dialyzer: [plt_add_deps: :project, plt_add_apps: [:plug, ${ecto_dep}:poison, :httpoison]]," "${elixir_project_name}/mix.exs"
     sed -i 's/ extra_applications: \(.*\)]/ extra_applications: \1, :wobserver]/' "${elixir_project_name}/mix.exs"
 
     # remove ecto "test" override
@@ -123,7 +170,12 @@ cd "$project_name"
     sed -i '/get.* PageController,/a \    get("/healthz/liveness", HealthzController, :liveness)' "${elixir_project_name}/lib/${elixir_project_name}_web/router.ex"
     sed -i '/get.* PageController,/a \    get("/healthz/ping", HealthzController, :ping)' "${elixir_project_name}/lib/${elixir_project_name}_web/router.ex"
 
-    cp $HOME/.elixir-start/healthz_controller.ex "$PWD/$elixir_project_name/lib/${elixir_project_name}_web/controllers/healthz_controller.ex"
+    if $setup_mssql; then
+        cp $HOME/.elixir-start/healthz_controller.ex "$PWD/$elixir_project_name/lib/${elixir_project_name}_web/controllers/healthz_controller.ex"
+    else
+        cp $HOME/.elixir-start/healthz_controller.ex.nomssql "$PWD/$elixir_project_name/lib/${elixir_project_name}_web/controllers/healthz_controller.ex"
+    fi
+
     sed -i "s/{{ELIXIR_CLASS}}/$elixir_class_name/" "$PWD/$elixir_project_name/lib/${elixir_project_name}_web/controllers/healthz_controller.ex"
 
     cp $HOME/.elixir-start/healthz_view.ex "$PWD/$elixir_project_name/lib/${elixir_project_name}_web/views/healthz_view.ex"
@@ -149,22 +201,24 @@ cd "$project_name"
     cp $HOME/.elixir-start/healthz_test.exs "$PWD/uats/test/healthz_test.exs"
     sed -i "s/{{ELIXIR_PROJECT_NAME}}/${elixir_project_name}/g" "$PWD/uats/test/healthz_test.exs"
 
-    mkdir uats/mssql-image
-    cp $HOME/.elixir-start/Dockerfile.mssql-image "$PWD/uats/mssql-image/Dockerfile"
-    sed -i "s/{{ELIXIR_PROJECT_NAME}}/${elixir_project_name}/g" "$PWD/uats/mssql-image/Dockerfile"
-    cp $HOME/.elixir-start/build-mssql.sh "$PWD/uats/mssql-image/build-mssql.sh"
-    chmod +x "$PWD/uats/mssql-image/build-mssql.sh"
-    sed -i "s/{{ELIXIR_PROJECT_NAME}}/${elixir_project_name}/g" "$PWD/uats/mssql-image/build-mssql.sh"
+    if $setup_mssql; then
+        mkdir uats/mssql-image
+        cp $HOME/.elixir-start/Dockerfile.mssql-image "$PWD/uats/mssql-image/Dockerfile"
+        sed -i "s/{{ELIXIR_PROJECT_NAME}}/${elixir_project_name}/g" "$PWD/uats/mssql-image/Dockerfile"
+
+        cp $HOME/.elixir-start/build-mssql.sh "$PWD/uats/mssql-image/build-mssql.sh"
+        chmod +x "$PWD/uats/mssql-image/build-mssql.sh"
+        sed -i "s/{{ELIXIR_PROJECT_NAME}}/${elixir_project_name}/g" "$PWD/uats/mssql-image/build-mssql.sh"
+    fi
 
     mkdir uats/project-image
-    cp $HOME/.elixir-start/Dockerfile.project-image "$PWD/uats/project-image/Dockerfile"
-    sed -i "s/{{ELIXIR_PROJECT_NAME}}/${elixir_project_name}/g" "$PWD/uats/project-image/Dockerfile"
-}
+    if $setup_mssql; then
+        cp $HOME/.elixir-start/Dockerfile.project-image "$PWD/uats/project-image/Dockerfile"
+    else
+        cp $HOME/.elixir-start/Dockerfile.project-image.nomssql "$PWD/uats/project-image/Dockerfile"
+    fi
 
-# Ensure everything is okay to run by running make; this also prebuilds PLTs
-# for dialyzer -- the first round is SLOW.
-{
-    make
+    sed -i "s/{{ELIXIR_PROJECT_NAME}}/${elixir_project_name}/g" "$PWD/uats/project-image/Dockerfile"
 }
 
 # Set up git

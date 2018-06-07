@@ -1,0 +1,15 @@
+defmodule {{ELIXIR_CLASS}}Web.HealthzController do
+  use {{ELIXIR_CLASS}}Web, :controller
+
+  def ping(conn, _params) do
+    render(conn, "ping.json")
+  end
+
+  def liveness(conn, _params) do
+    render(conn, "liveness-success.json")
+  end
+
+  def readiness(conn, _params) do
+    render(conn, "readiness-success.json")
+  end
+end
