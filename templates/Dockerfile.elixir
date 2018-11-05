@@ -15,6 +15,10 @@ RUN apt-get update && \
     rm nodesource_setup.sh && \
     apt-get install --no-install-recommends --yes nodejs && \
     \
+    curl -O https://download.docker.com/linux/static/stable/x86_64/docker-18.06.1-ce.tgz && \
+    tar --strip-components=1 -xvzf docker-18.06.1-ce.tgz -C /usr/local/bin && \
+    rm docker-18.06.1-ce.tgz && \
+    \
     curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
     curl https://packages.microsoft.com/config/debian/8/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
     echo 'deb http://ftp.us.debian.org/debian jessie main' >> /etc/apt/sources.list.d/mssql-release.list && \

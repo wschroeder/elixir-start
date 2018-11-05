@@ -42,11 +42,11 @@ control/uats-network:
 	touch "$@"
 
 control/uats: control/elixir-unit control/uats-deps control/mssql-container control/project-image control/uats-network ${ELIXIR_PROJECT_NAME}/assets/node_modules/brunch/bin/brunch $(shell find uats/ -type f)
-	docker run --network ${ELIXIR_PROJECT_NAME}-uats -v $(shell which docker):/usr/bin/docker:ro -v /var/run/docker.sock:/var/run/docker.sock:rw -v "${PWD}/control/mix":/root/.mix -v "${PWD}/uats":/work -w /work --rm -t ${ELIXIR_IMAGE} mix test --trace
+	docker run --network ${ELIXIR_PROJECT_NAME}-uats -v /var/run/docker.sock:/var/run/docker.sock:rw -v "${PWD}/control/mix":/root/.mix -v "${PWD}/uats":/work -w /work --rm -t ${ELIXIR_IMAGE} mix test --trace
 	touch "$@"
 
 repl-uats: control/elixir-unit control/uats-deps control/mssql-container control/project-image control/uats-network ${ELIXIR_PROJECT_NAME}/assets/node_modules/brunch/bin/brunch $(shell find uats/ -type f)
-	docker run --network ${ELIXIR_PROJECT_NAME}-uats -v $(shell which docker):/usr/bin/docker:ro -v /var/run/docker.sock:/var/run/docker.sock:rw -v "${PWD}/control/mix":/root/.mix -v "${PWD}/uats":/work -w /work --rm -it ${ELIXIR_IMAGE} iex -S mix test --trace
+	docker run --network ${ELIXIR_PROJECT_NAME}-uats -v /var/run/docker.sock:/var/run/docker.sock:rw -v "${PWD}/control/mix":/root/.mix -v "${PWD}/uats":/work -w /work --rm -it ${ELIXIR_IMAGE} iex -S mix test --trace
 
 control/uats-deps: uats/mix.exs
 	docker run -v "${PWD}/control/mix":/root/.mix -v "${PWD}/uats":/work -w /work --rm -t ${ELIXIR_IMAGE} mix deps.get
