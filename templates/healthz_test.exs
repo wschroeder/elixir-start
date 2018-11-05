@@ -25,12 +25,13 @@ defmodule HealthzTest do
   end
 
   defp test_healthz_endpoint(url, expected_body, context) do
-    Stream.interval(1000)
-    |> Stream.take(5)
-    |> Stream.map(fn (_) -> HTTPoison.get "http://#{context.container_name}/healthz/#{url}" end)
-    |> Enum.take_while(fn ({:ok, _response}) -> false; (_) -> true end)
+    {status, response} = [0]
+                         |> Stream.concat(Stream.interval(1000))
+                         |> Stream.take(10)
+                         |> Stream.map(fn (_) -> HTTPoison.get "http://#{context.container_name}/healthz/#{url}" end)
+                         |> Stream.drop_while(fn ({:ok, _response}) -> false; (_) -> true end)
+                         |> Enum.at(0)
 
-    {status, response} = HTTPoison.get "http://#{context.container_name}/healthz/#{url}"
     assert status == :ok
     assert response.status_code == 200
     assert response.body == expected_body
